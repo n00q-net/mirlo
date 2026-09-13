@@ -15,6 +15,7 @@ import { Response } from "express";
 import { logger } from "../logger";
 
 import { findArtistIdForURLSlug } from "./artist";
+import { FormatOptions } from "./audioFormats";
 import { sendBasecampAMessage } from "./basecamp";
 import { deleteDownloadableContent } from "./content";
 import { AppError } from "./error";
@@ -340,13 +341,7 @@ export const trackGroupSingleInclude = (options: {
   } satisfies Prisma.TrackGroupInclude<DefaultArgs>;
 };
 
-export type FormatOptions =
-  | "flac"
-  | "wav"
-  | "opus"
-  | "320.mp3"
-  | "256.mp3"
-  | "128.mp3";
+export type { FormatOptions };
 
 export async function buildZipFileForPath(
   tracks: (Track & {
