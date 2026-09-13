@@ -26,11 +26,15 @@ services:
       - minio-test:minio
       - pgsql-test:pgsql
     ports: !reset []
-    depends_on: !reset
-      - redis-test
-      - pgsql-test
-      - minio-test
-      - stripe-test
+    depends_on: !override
+      redis-test:
+        condition: service_started
+      pgsql-test:
+        condition: service_started
+      stripe-test:
+        condition: service_started
+      garage-init-test:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: test
       API_DOMAIN: http://api:3000
@@ -47,11 +51,27 @@ services:
     extends:
       file: docker-compose.api.yml
       service: minio
-    container_name: blackbird-minio-test
+    container_name: blackbird-garage-test
     networks: !reset [test-network]
     ports: !reset []
-    volumes: !reset
-      - minio_storage-test:/data
+    volumes: !override
+      - minio_storage-test:/var/lib/garage
+      - ./scripts/garage/garage.toml:/etc/garage.toml:ro
+    profiles: [test]
+
+  garage-init-test:
+    extends:
+      file: docker-compose.api.yml
+      service: garage-init
+    container_name: blackbird-garage-init-test
+    networks: !reset [test-network]
+    links:
+      - minio-test:minio
+    depends_on: !override
+      - minio-test
+    environment:
+      GARAGE_HOST: minio
+    restart: no
     profiles: [test]
 
   pgsql-test:

@@ -872,18 +872,10 @@ export const removeObjectsFromBucket = async (
   prefix: string
 ) => {
   const objects = await getObjectList(bucketName, prefix);
-  if (backendStorage === "backblaze") {
-    await Promise.all(
-      objects.map((o) => removeObjectFromStorage(bucketName, o.name!))
-    );
-  } else if (backendStorage === "minio" && minioClient) {
-    const minioObojects = await getObjectListFromMinio(bucketName, prefix);
 
-    await minioClient.removeObjects(
-      bucketName,
-      minioObojects.map((o) => o.name!)
-    );
-  }
+  await Promise.all(
+    objects.map((o) => removeObjectFromStorage(bucketName, o.name!))
+  );
 };
 
 // ─── Domain storage operations ────────────────────────────────────────────────

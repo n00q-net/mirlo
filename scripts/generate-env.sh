@@ -10,7 +10,8 @@
 #   MIRLO_DOMAIN=https://mirlo.example.com bash scripts/generate-env.sh
 #
 # Optionally pass S3-compatible object storage credentials (Backblaze B2,
-# Hetzner Object Storage, etc.) to skip MinIO and use them instead:
+# Hetzner Object Storage, etc.) to skip the bundled Garage store and use them
+# instead:
 #   S3_ACCESS_KEY_ID=... S3_SECRET_ACCESS_KEY=... S3_REGION=... S3_ENDPOINT=... \
 #     bash scripts/generate-env.sh
 
@@ -22,7 +23,7 @@ echo ""
 echo "📝 Mirlo Environment Setup"
 echo ""
 
-# Never overwrite an existing .env: Postgres, Redis and MinIO bake their
+# Never overwrite an existing .env: Postgres, Redis and Garage bake their
 # credentials into their data volumes on first start, so regenerating
 # passwords after that locks the app out of its own services.
 if [ -f .env ]; then
@@ -71,8 +72,11 @@ REFRESH_TOKEN_SECRET=$(generate_secret)
 POSTGRES_USER=mirlo
 POSTGRES_PASSWORD=$(generate_secret)
 REDIS_PASSWORD=$(generate_secret)
-MINIO_ROOT_USER=mirlo
-MINIO_ROOT_PASSWORD=$(generate_secret)
+# Garage requires its S3 access keys in a fixed shape: "GK" + 24 hex chars
+# for the ID, and exactly 64 hex chars for the secret. generate_secret() emits
+# 48, so these two are generated separately rather than reusing it.
+MINIO_ROOT_USER=GK$(openssl rand -hex 12)
+MINIO_ROOT_PASSWORD=$(openssl rand -hex 32)
 
 # The postgres image names the database after POSTGRES_USER by default, and
 # DATABASE_URL is derived from the same values so they can never disagree.
